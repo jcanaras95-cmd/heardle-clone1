@@ -168,8 +168,11 @@
         fetch(`songs/${songSet}.json`)
             .then(response => response.json())
             .then((json) => {
-                songs = json.sort((a, b) => 0.5 - Math.random());
-                song = songs[Math.floor(Math.random() * songs.length)];
+                songs = json;
+                const now = new Date();
+                const daySeed = Math.floor(now.getTime() / 86400000);
+                const songIndex = daySeed % songs.length;
+                song = songs[songIndex];
                 songs.forEach((song) => {
                     let option = document.createElement('option');
                     option.value = song.string;
