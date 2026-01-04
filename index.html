@@ -165,7 +165,7 @@
             }, (totalSeconds[currentGuess] * 1000));
         };
 
-        fetch(`https://raw.githubusercontent.com/hubermjonathan/heardle/main/songs/${songSet}.json`)
+        fetch(`songs/${songSet}.json`)
             .then(response => response.json())
             .then((json) => {
                 songs = json.sort((a, b) => 0.5 - Math.random());
