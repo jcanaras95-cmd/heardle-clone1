@@ -1,10 +1,8 @@
 <!DOCTYPE html>
-
 <html>
 <head>
     <title>heardle - but better</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
-
     <style>
         body {
             padding: 9em;
@@ -14,47 +12,38 @@
             font-weight: bold;
             font-family: sans-serif;
         }
-
         body > * {
             padding: 0.5em 0;
         }
-
         datalist {
             height: 5em;
         }
     </style>
 </head>
-
 <body>
     <h1>🎧 heardle - but better</h1>
-
     <div>
         <span id="display">...</span>
     </div>
-
     <div>
         <span id="guessCounter">⬜️ ⬜️ ⬜️ ⬜️ ⬜️ ⬜️</span>
     </div>
-
     <div>
         <input id="volumeSlider" type="range" min="1" max="100" value="25">
         <button id="skipButton" disabled>skip +1s</button>
         <button id="stopButton" disabled>stop</button>
         <button id="playButton" disabled>play</button>
     </div>
-
     <div>
         <input id="guessInput" list="songsList" name="song" autocomplete="off">
         <datalist id="songsList"></datalist>
         <button id="guessButton" disabled>guess</button>
     </div>
-
     <div hidden>
         <div>
             <iframe id="player" allow="autoplay" width="100%" height="166" src="https://w.soundcloud.com/player/?url=https://soundcloud.com/rick-astley-official/never-gonna-give-you-up" style="position: absolute; left: -9999px;"></iframe>
         </div>
     </div>
-
     <script src="https://w.soundcloud.com/player/api.js"></script>
     <script>
         let display = document.getElementById("display");
@@ -67,7 +56,6 @@
         let guessInput = document.getElementById("guessInput");
         let guessButton = document.getElementById("guessButton");
         let sc = SC.Widget('player');
-
         let guesses = [];
         let currentGuess = 0;
         let score = [null, null, null, null, null, null];
@@ -76,20 +64,17 @@
         let songSet = (new URLSearchParams(window.location.search)).get('songs') || 'default';
         var songs = [];
         var song = {};
-
         sc.bind(SC.Widget.Events.READY, () => {
             skipButton.disabled = false;
             playButton.disabled = false;
             sc.setVolume(25);
         });
-
         let disableInputs = () => {
             skipButton.disabled = true;
             playButton.disabled = true;
             guessInput.disabled = true;
             guessButton.disabled = true;
         };
-
         let enableInputs = () => {
             skipButton.disabled = false;
             stopButton.disabled = false;
@@ -97,7 +82,6 @@
             guessInput.disabled = false;
             guessButton.disabled = false;
         };
-
         let checkEndGame = () => {
             if (currentGuess == 6) {
                 disableInputs();
@@ -113,13 +97,11 @@
                 }
             }
         }
-
         let updateGuesses = () => {
             // display.innerHTML = '';
             // guesses.forEach((guess) => {
-            //     display.innerHTML += `${guess}</br>`;
+            // display.innerHTML += `${guess}</br>`;
             // });
-
             var scoreString = '';
             score.forEach((guess) => {
                 if (guess === null) {
@@ -132,18 +114,15 @@
             });
             guessCounter.innerHTML = scoreString;
         };
-
         volumeSlider.oninput = (e) => {
             sc.setVolume(e.target.value);
         };
-
         skipButton.onclick = () => {
             guesses[currentGuess] = 'SKIPPED';
             score[currentGuess++] = false;
             updateGuesses();
             checkEndGame();
         };
-
         stopButton.onclick = () => {
             clearTimeout(playerTimeout);
             sc.pause();
@@ -151,12 +130,10 @@
             enableInputs();
             stopButton.disabled = true;
         };
-
         playButton.onclick = () => {
             disableInputs();
             stopButton.disabled = false;
             sc.play();
-
             playerTimeout = setTimeout(() => {
                 sc.pause();
                 sc.seekTo(0);
@@ -164,14 +141,18 @@
                 stopButton.disabled = true;
             }, (totalSeconds[currentGuess] * 1000));
         };
-
         fetch(`songs/${songSet}.json`)
             .then(response => response.json())
             .then((json) => {
                 songs = json;
                 const now = new Date();
                 const daySeed = Math.floor(now.getTime() / 86400000);
-                const songIndex = daySeed % songs.length;
+                // Simple hash to make pseudo-random but consistent per day
+                let hash = daySeed;
+                hash = ((hash >> 16) ^ hash) * 0x45d9f3b;
+                hash = ((hash >> 16) ^ hash) * 0x45d9f3b;
+                hash = (hash >> 16) ^ hash;
+                const songIndex = Math.abs(hash) % songs.length;
                 song = songs[songIndex];
                 songs.forEach((song) => {
                     let option = document.createElement('option');
@@ -180,18 +161,15 @@
                 })
                 sc.load(song.url);
             });
-
-        guessInput.oninput = (e) => {            
+        guessInput.oninput = (e) => {
             if (songs.map(song => song.string).includes(guessInput.value)) {
                 guessButton.disabled = false;
             } else {
                 guessButton.disabled = true;
             }
         };
-
         guessButton.onclick = () => {
             guesses[currentGuess] = guessInput.value;
-
             if (song.string === guessInput.value) {
                 score[currentGuess] = true;
                 currentGuess = 6;
@@ -200,7 +178,6 @@
                 guessInput.value = '';
                 guessButton.disabled = true;
             }
-
             updateGuesses();
             checkEndGame();
         };
